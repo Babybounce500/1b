@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>Trading System Automatisierung</title>
+</head>
+<body>
+<form id="tradingForm">
+<label for="ticker">Aktienkürzel:</label>
+<input id="ticker" name="ticker" type="text"/><br/>
+<label for="duration">Dauer:</label>
+<input id="duration" name="duration" type="text"/><br/>
+<label for="balance">Kontostand:</label>
+<input id="balance" name="balance" type="text"/><br/>
+<input type="submit" value="Absenden"/>
+</form>
+<div id="result">
+<!-- Hier werden die Ergebnisse angezeigt -->
+</div>
+<script>
+        // Ihr JavaScript-Code hier
+    </script>
+<script>
+      // Automatisches Ausfüllen des Aktienkürzel-Feldes
+      document.getElementById("stockSymbol").value = "IHR_AKTIENKUERZEL"; // Ersetzen Sie "IHR_AKTIENKUERZEL" durch das gewünschte Kürzel
+    
+      // Automatische Auswahl der Dauer aus dem Dropdown-Menü
+      var select = document.getElementById("timeframe");
+      select.value = "IHRE_GEWUENSCHTE_DAUER"; // Ersetzen Sie "IHRE_GEWUENSCHTE_DAUER" durch den gewünschten Zeitraum
+    
+      // Automatisches Klicken des "API Anfrage" Buttons
+      // Da der Button keine ID hat, verwenden wir eine andere Methode, um ihn zu finden und zu klicken
+      var buttons = document.getElementsByTagName("button");
+      for (var i = 0; i < buttons.length; i++) {
+        if (buttons[i].textContent === "API Anfrage") { // Ersetzen Sie "API Anfrage" durch den tatsächlichen Text des Buttons, falls abweichend
+          buttons[i].click();
+          break;
+        }
+      }
+    </script>
+<script>
+// Read cookie for stock symbol
+var aktienkuerzel = document.cookie.replace(/(?:(?:^|.*;\s*)aktienkuerzel\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+document.getElementById("ticker").value = decodeURIComponent(aktienkuerzel);
+// Read cookie for duration
+var dauer = document.cookie.replace(/(?:(?:^|.*;\s*)dauer\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+document.getElementById("duration").value = decodeURIComponent(dauer);
+</script><script>
+function fetchResults() {
+  var ticker = encodeURIComponent(document.getElementById("ticker").value);
+  var duration = encodeURIComponent(document.getElementById("duration").value);
+
+  // Fetch request to the AUTOCANDELA page (replace with actual AUTOCANDELA URL)
+  fetch(`https://babybounce500.github.io/1b/AUTOCANDELA?ticker=${ticker}&duration=${duration}`)
+    .then(response => response.text())
+    .then(data => {
+      // Extract and display data in DOM
+      // (This depends on how the data on the AUTOCANDELA page is structured.)
+    })
+    .catch(error => {
+      console.error('Error fetching data:', error);
+    });
+}
+</script><button onclick="fetchResults()">Ergebnisse abrufen</button></body>
+</html>
