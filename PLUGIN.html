@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Analysis Chatbot</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div id="chatWindow">
+        <!-- Chat messages will be appended here -->
+    </div>
+    <input type="text" id="userInput" placeholder="Type your message...">
+    <button onclick="processInput()">Send</button>
+
+    <script>
+        const API_KEY = '64d7d0670ee1f8.90133693';
+
+        function processInput() {
+            const userInput = document.getElementById('userInput').value;
+
+            if (userInput.startsWith('*')) {
+                const command = userInput.substring(1).split(' ');
+                let [units, timeframe] = command[0].match(/(\d+)([a-zA-Z]+)/).slice(1);
+
+                units = parseInt(units);
+
+                const today = new Date();
+                let startDate, endDate;
+                endDate = today;
+
+                if (timeframe === 'd') {
+                    startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - units);
+                } else if (timeframe === 'w') {
+                    startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (7 * units));
+                } else if (timeframe === 'm') {
+                    startDate = new Date(today.getFullYear(), today.getMonth() - units, today.getDate());
+                }
+
+                const startDateStr = startDate.toISOString().split('T')[0];
+                const endDateStr = endDate.toISOString().split('T')[0];
+
+                const symbol = command[1] || 'AAPL.US';  // Default to AAPL.US if no symbol is provided
+
+                const apiUrl = `https://eodhistoricaldata.com/api/eod/${symbol}?api_token=${API_KEY}&fmt=json&from=${startDateStr}&to=${endDateStr}`;
+
+                fetch(apiUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        displayStockData(data);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+
+            document.getElementById('userInput').value = '';
+        }
+
+        function displayStockData(data) {
+            const chatWindow = document.getElementById('chatWindow');
+            let displayText = 'Stock Data:\n';
+
+            data.forEach(record => {
+                displayText += `Date: ${record.date}, Close Price: ${record.close}\n`;
+            });
+
+            chatWindow.innerHTML += `<div>User: ${document.getElementById('userInput').value}</div>`;
+            chatWindow.innerHTML += `<div>Bot: ${displayText}</div>`;
+        }
+    </script>
+</body>
+</html>
+*3d AAPL.US: Abrufen der AAPL-Daten der letzten 3 Tage
+*2w MSFT.US: Abrufen der Microsoft-Daten der letzten 2 Wochen
+*1m GOOGL.US: Abrufen der Google-Daten des letzten Monats

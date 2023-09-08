@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Analysis Chatbot</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+</head>
+<body>
+    <div id="chatWindow" style="border: 1px solid #ccc; padding: 20px; height: 300px; overflow: auto;">
+        <!-- Chat messages will be appended here -->
+    </div>
+    <input type="text" id="userInput" placeholder="Type your message..." style="width: 80%;">
+    <button onclick="processInput()">Send</button>
+    <div id="chart_div" style="width: 100%; height: 400px;"></div>
+
+    <script>
+        // Load Google Charts
+        google.charts.load('current', {'packages':['corechart']});
+
+        const API_KEY = '64d7d0670ee1f8.90133693';  // Hard-coded API key
+
+        function processInput() {
+            const userInput = document.getElementById('userInput').value;
+
+            if (userInput.startsWith('*')) {
+                const command = userInput.substring(1).split(' ');
+                const [units, timeframe] = command[0].match(/(\d+)([a-zA-Z]+)/).slice(1);
+                
+                const symbol = command[1] || 'AAPL.US';  // Default to AAPL.US if no symbol is provided
+                const apiUrl = `https://eodhistoricaldata.com/api/eod/${symbol}?api_token=${API_KEY}&fmt=json`;
+
+                fetch(apiUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        const slicedData = data.slice(-parseInt(units));  // Get the latest N records
+                        displayStockData(slicedData);
+                        drawChart(slicedData);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+
+            // Clear the input field
+            document.getElementById('userInput').value = '';
+        }
+
+        function displayStockData(data) {
+            const chatWindow = document.getElementById('chatWindow');
+            let displayText = 'Stock Data:\n';
+            
+            data.forEach(record => {
+                displayText += `Date: ${record.date}, Close Price: ${record.close}\n`;
+            });
+
+            chatWindow.innerHTML += `<div>User: ${document.getElementById('userInput').value}</div>`;
+            chatWindow.innerHTML += `<div>Bot: ${displayText}</div>`;
+        }
+
+        function drawChart(data) {
+            const chartData = [['Date', 'Close Price']];
+            
+            for (const record of data) {
+                chartData.push([record.date, record.close]);
+            }
+
+            const dataTable = google.visualization.arrayToDataTable(chartData);
+
+            const options = {
+                title: 'Stock Close Prices',
+                curveType: 'function',
+                legend: { position: 'bottom' },
+                chartArea: { width: '80%', height: '70%' },
+                hAxis: {
+                    slantedText: true,
+                    slantedTextAngle: 30  // Rotate axis labels
+                },
+                responsive: true  // Enable responsiveness
+            };
+
+            const chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+            chart.draw(dataTable, options);
+        }
+    </script>
+</body>
+</html>
