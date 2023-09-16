@@ -1,0 +1,297 @@
+
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>API Anfrage für Aktienkurse</title>
+<style>
+body {
+    background-color: #251532; /* Hintergrundfarbe */
+    color: white; /* Textfarbe */
+    font-family: Arial, sans-serif; /* Schriftart */
+}
+.container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+}
+
+
+        /* Add your CSS styling here */
+        textarea {
+            width: 100%;
+            height: 600px;
+        }
+    
+/* Dark theme styles */
+body {
+    background-color: #121212;
+    color: #ffffff;
+}
+
+textarea {
+    background-color: #1e1e1e;
+    color: #ffffff;
+}
+
+button {
+    background-color: #333333;
+    color: #ffffff;
+}
+
+.chat-window {
+    background-color: #1e1e1e;
+    color: #ffffff;
+}
+
+/* Mobile Responsive styles */
+@media only screen and (max-width: 768px) {
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    .chat-window {
+        width: 100%;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+}
+
+/* Banking Style for Input Fields */
+input[type="text"], input[type="password"], input[type="number"], select {
+    border: 2px solid #333;
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-size: 16px;
+    background-color: #1e1e1e;
+    color: #ffffff;
+}
+
+/* Banking Style for Tables */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    border: 3px solid #333;
+    text-align: left;
+    background-color: #1e1e1e;
+    color: #ffffff;
+}
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #333;
+}
+
+/* Banking Style for Containers */
+.container {
+    background-color: #1e1e1e;
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    color: #ffffff;
+}
+
+/* Responsive Table Styles for Mobile Devices */
+@media screen and (max-width: 768px) {
+    table {
+        width: auto;
+    }
+    th, td {
+        padding: 8px;
+        font-size: 14px;
+    }
+}
+
+
+/* Targeted Styles to Make All Buttons Bigger and User-Friendly */
+
+button, input[type="button"], input[type="submit"], input[type="reset"] {
+    padding: 20px 40px;
+    font-size: 18px;
+    border-radius: 12px;
+    transition: all 0.3s ease-in-out;
+}
+
+button:hover, input[type="button"]:hover, input[type="submit"]:hover, input[type="reset"]:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+</style>
+    <!-- Fügen Sie die Google Charts API hinzu -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+</head>
+<body>
+
+<h2>Trade Journal</h2>
+
+<h3>Add New Trade</h3>
+<form id="addTradeForm">
+    <input type="button" value="Clear All" onclick="clearAll()">
+    <label for="tradeData">Trade Data (Paste a trade row here):</label><br>
+    <textarea id="tradeData" rows="4" cols="50"></textarea><br>
+    <input type="button" value="Add Trade" onclick="addTrade()">
+</form>
+
+<h3>Trades</h3>
+<table id="tradeTable">
+    <thead>
+        <tr>
+            <th>Datum/Uhrzeit Kauf</th>
+            <th>Datum/Uhrzeit Verkauf</th>
+            <th>Basiswert</th>
+            <th>Trend</th>
+            <th>WKN</th>
+            <th>Einsteigssumme</th>
+            <th>Kaufkurs</th>
+            <th>Verkaufkurs</th>
+            <th>Stückzahl</th>
+            <th>Haltedauer</th>
+            <th>Ausstiegssumme</th>
+            <th>G. u. V. In €</th>
+            <th>G. u. V. In %</th>
+            <th>Notizen</th>
+        </tr>
+    </thead>
+    <tbody id="tradeBody">
+        <!-- Trades will be populated here -->
+    </tbody>
+</table>
+
+<h3>Analysis</h3>
+<div id="analysisResults">
+    <!-- Analysis results will be displayed here -->
+</div>
+
+<script>
+let trades = JSON.parse(localStorage.getItem('trades')) || [];
+
+function addTradeRow(trade) {
+    let table = document.getElementById("tradeBody");
+    let newRow = table.insertRow(table.rows.length);
+    Object.keys(trade).forEach((key, index) => {
+        let cell = newRow.insertCell(index);
+        cell.innerHTML = trade[key];
+    });
+}
+
+function addTrade() {
+    let tradeData = document.getElementById('tradeData').value.trim();
+    if (tradeData !== '') {
+        let tradeArray = tradeData.split(/\s*\|\s*/);
+        if (tradeArray.length === 14) {
+            let newTrade = {
+                'Datum/Uhrzeit Kauf': tradeArray[0],
+                'Datum/Uhrzeit Verkauf': tradeArray[1],
+                'Basiswert': tradeArray[2],
+                'Trend': tradeArray[3],
+                'WKN': tradeArray[4],
+                'Einsteigssumme': tradeArray[5],
+                'Kaufkurs': tradeArray[6],
+                'Verkaufkurs': tradeArray[7],
+                'Stückzahl': tradeArray[8],
+                'Haltedauer': tradeArray[9],
+                'Ausstiegssumme': tradeArray[10],
+                'G. u. V. In €': tradeArray[11],
+                'G. u. V. In %': tradeArray[12],
+                'Notizen': tradeArray[13]
+            };
+            trades.push(newTrade);
+            addTradeRow(newTrade);
+            localStorage.setItem('trades', JSON.stringify(trades));
+            document.getElementById('tradeData').value = '';
+            calculateStats();
+        } else {
+            alert('Bitte geben Sie den Trade im richtigen Format ein.');
+        }
+    } else {
+        alert('Bitte fügen Sie den Trade-Daten ein.');
+    }
+}
+
+function calculateStats() {
+    let totalProfit = 0;
+    let totalLoss = 0;
+    let totalDuration = 0;
+    let bestTrade = null;
+    let worstTrade = null;
+
+    trades.forEach(trade => {
+        let profitLossStr = trade['G. u. V. In €'].replace(',', '.').replace(/[^0-9.-]/g, '');
+        let profitLoss = parseFloat(profitLossStr);
+        if (profitLoss > 0) {
+            totalProfit += profitLoss;
+        } else {
+            totalLoss += Math.abs(profitLoss);
+        }
+
+        let durationStr = trade['Haltedauer'].replace(',', '.').replace(/[^0-9.-]/g, '');
+        let duration = parseFloat(durationStr);
+        if (!isNaN(duration)) {
+            totalDuration += duration;
+        }
+
+        if (bestTrade === null || profitLoss > bestTrade) {
+            bestTrade = profitLoss;
+        }
+        if (worstTrade === null || profitLoss < worstTrade) {
+            worstTrade = profitLoss;
+        }
+    });
+
+    let avgDuration = totalDuration / trades.length;
+    let avgProfit = totalProfit / trades.length;
+    let avgLoss = totalLoss / trades.length;
+    
+    let totalEntryAmount = 0;
+
+    trades.forEach(trade => {
+        let entryAmountStr = trade['Einsteigssumme'].replace(',', '.').replace(/[^0-9.-]/g, '');
+        let entryAmount = parseFloat(entryAmountStr);
+        if (!isNaN(entryAmount)) {
+            totalEntryAmount += entryAmount;
+        }
+    });
+
+    let avgEntryAmount = totalEntryAmount / trades.length;
+    let netProfit = totalProfit - totalLoss;
+    
+
+    let analysisResults = document.getElementById('analysisResults');
+    analysisResults.innerHTML = `
+        <p>Gesamtergebnis: € ${netProfit.toFixed(2)}</p>
+        <p>Durchschnittliche Haltedauer: ${avgDuration.toFixed(2)} Tage</p>
+        <p>Durchschnittlicher Gewinn: € ${avgProfit.toFixed(2)}</p>
+        <p>Durchschnittlicher Verlust: € ${avgLoss.toFixed(2)}</p>
+        <p>Bester Trade: € ${bestTrade.toFixed(2)}</p>
+        
+    <p>Schlechtester Trade: € ${worstTrade.toFixed(2)}</p>
+    <p>Durchschnittliche Einstiegssumme: € ${avgEntryAmount.toFixed(2)}</p>
+    
+    `;
+}
+
+function loadTrades() {
+    trades.forEach(trade => {
+        addTradeRow(trade);
+    });
+}
+
+loadTrades();
+calculateStats();
+
+
+function clearAll() {
+    localStorage.removeItem('trades');
+    trades = [];
+    let tradeBody = document.getElementById('tradeBody');
+    while (tradeBody.firstChild) {
+        tradeBody.removeChild(tradeBody.firstChild);
+    }
+    calculateStats();
+}
+</script>
+    
+</body>
+</html>
